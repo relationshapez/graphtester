@@ -1,0 +1,905 @@
+<!--
+  Copyright (c) 2026 Alan Miller
+  Released under the MIT License
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Graph Tester</title>
+  <style>
+    :root {
+      --gw-blue: #033C5A;
+      --gw-blue-2: #0b587f;
+      --gw-buff: #D6BF91;
+      --gw-buff-light: #f5efe3;
+      --paper: #fffdfa;
+      --white: #ffffff;
+      --good-green: #1E7F4F;
+      --bad-red: #A22C29;
+      --shadow: 0 12px 30px rgba(3, 60, 90, 0.14);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, var(--gw-buff-light) 0%, #fbf8f2 100%);
+      color: var(--gw-blue);
+    }
+
+    body {
+      padding: 12px;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 940px;
+      margin: 0 auto;
+      min-height: calc(100vh - 24px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      height: 790px;
+      background: var(--white);
+      border: 3px solid var(--gw-blue);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      padding: 18px 18px 0 18px;
+      background: linear-gradient(180deg, #fffdfa 0%, #f8f3e8 100%);
+    }
+
+    .title-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .title-bar h1 {
+      margin: 0;
+      font-size: clamp(1.35rem, 3vw, 2rem);
+      letter-spacing: 0.01em;
+      color: var(--gw-blue);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn,
+    .btn {
+      appearance: none;
+      border: 2px solid var(--gw-blue);
+      border-radius: 16px;
+      min-height: 52px;
+      padding: 12px 16px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.12s ease, opacity 0.12s ease;
+      box-shadow: 0 4px 10px rgba(3, 60, 90, 0.09);
+    }
+
+    .tab-btn,
+    .btn.secondary {
+      background: #f8f1e2;
+      color: var(--gw-blue);
+    }
+
+    .btn.primary {
+      background: var(--gw-blue);
+      color: var(--white);
+    }
+
+    .btn.buff {
+      background: var(--gw-buff);
+      color: var(--gw-blue);
+      border-color: var(--gw-buff);
+    }
+
+    .tab-btn.active {
+      background: var(--gw-blue);
+      color: var(--white);
+      box-shadow: 0 0 0 4px rgba(3, 60, 90, 0.12);
+    }
+
+    .tab-btn:active,
+    .btn:active {
+      transform: scale(0.985);
+    }
+
+    .tab-btn:hover,
+    .btn:hover:not(:disabled),
+    .btn:focus-visible:not(:disabled) {
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .panel-wrap {
+      padding: 0 18px 18px 18px;
+      flex: 1;
+      display: flex;
+    }
+
+    .tool-panel {
+      display: none;
+      background: var(--white);
+      width: 100%;
+      height: 100%;
+    }
+
+    .tool-panel.active {
+      display: block;
+    }
+
+    .content {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--paper);
+      border: 2px solid var(--gw-buff);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+    }
+
+    .fixed-question-card {
+      min-height: 246px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .fixed-output-card {
+      min-height: 194px;
+    }
+
+    .question,
+    .prompt,
+    .instructions,
+    .answer,
+    .explanation,
+    .result {
+      line-height: 1.55;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .question,
+    .prompt,
+    .instructions {
+      font-size: clamp(1.06rem, 2.6vw, 1.28rem);
+      font-weight: 400;
+      margin: 0;
+      white-space: pre-line;
+    }
+
+    .center-text {
+      text-align: center;
+    }
+
+    .left-text {
+      text-align: left;
+    }
+
+    .instructions-mode {
+      min-height: 330px;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+
+    .controls-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .controls-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .controls-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .answer-box {
+      min-height: 92px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--gw-blue);
+      background: #fcfaf5;
+    }
+
+    .answer-box.hidden-visibility {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .hidden-display {
+      display: none;
+    }
+
+    .answer-box.teams-answer-box,
+    .answer-box.exist-answer-box {
+      background: #fcfaf5;
+      border: 2px solid var(--gw-buff);
+      padding: 16px;
+      border-radius: var(--radius-lg);
+    }
+
+    .answer-box.exist-answer-box {
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .answer {
+      margin: 0;
+      font-size: 1.45rem;
+      font-weight: 700;
+    }
+
+    .result {
+      min-height: 0;
+      text-align: center;
+      font-size: 1.45rem;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .exist-explanation-text {
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.55;
+      text-align: center;
+      margin: 0;
+      max-width: 100%;
+    }
+
+    .result.correct { color: var(--good-green); }
+    .result.incorrect { color: var(--bad-red); }
+
+    .explanation-box {
+      min-height: 4.5em;
+      background: rgba(255,255,255,0.68);
+      border: 1.5px solid rgba(3, 60, 90, 0.14);
+      border-radius: 18px;
+      padding: 14px;
+      font-size: 1rem;
+      text-align: center;
+      white-space: normal;
+    }
+
+    .outline-correct {
+      border-width: 3px !important;
+      border-color: var(--good-green) !important;
+      box-shadow: 0 0 0 6px rgba(30, 127, 79, 0.28) !important;
+    }
+
+    .outline-incorrect {
+      border-width: 3px !important;
+      border-color: var(--bad-red) !important;
+      box-shadow: 0 0 0 6px rgba(162, 44, 41, 0.28) !important;
+    }
+
+    @media (max-width: 720px) {
+      .controls-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 10px;
+      }
+
+      .app-shell {
+        min-height: calc(100vh - 20px);
+      }
+
+      .app {
+        height: 980px;
+      }
+
+      .app-header,
+      .panel-wrap {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .tabs,
+      .controls-2,
+      .controls-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        padding: 14px;
+      }
+
+      .fixed-question-card {
+        min-height: 214px;
+      }
+
+      .fixed-output-card {
+        min-height: 248px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <div class="app">
+      <header class="app-header">
+        <div class="title-bar">
+          <h1>Graph Tester</h1>
+        </div>
+        <nav class="tabs" aria-label="Tool tabs">
+          <button class="tab-btn active" type="button" data-tab="exist">Existence</button>
+          <button class="tab-btn" type="button" data-tab="solve">Valence</button>
+          <button class="tab-btn" type="button" data-tab="teams">Grouping</button>
+        </nav>
+      </header>
+
+      <div class="panel-wrap">
+        <section id="panel-exist" class="tool-panel active" aria-label="Exist tool">
+          <div class="content">
+            <div class="card fixed-question-card">
+              <div id="exist-question" class="question center-text"></div>
+            </div>
+
+            <div class="controls-4">
+              <button id="exist-yes" class="btn primary" type="button">Yes</button>
+              <button id="exist-no" class="btn primary" type="button">No</button>
+              <button id="exist-why" class="btn primary" type="button" disabled>Why?</button>
+              <button id="exist-refresh" class="btn buff" type="button">Refresh</button>
+            </div>
+
+            <div id="exist-result-box" class="card answer-box exist-answer-box fixed-output-card hidden-visibility" aria-live="polite">
+              <div id="exist-result" class="result"></div>
+              <div id="exist-explanation" class="exist-explanation-text"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="panel-solve" class="tool-panel" aria-label="Solve tool">
+          <div class="content">
+            <div class="card fixed-question-card">
+              <div id="solve-question" class="question center-text"></div>
+            </div>
+
+            <div class="controls-2">
+              <button id="solve-show" class="btn primary" type="button">Solution</button>
+              <button id="solve-refresh" class="btn buff" type="button">Refresh</button>
+            </div>
+
+            <div id="solve-answer-box" class="card answer-box hidden-visibility" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <section id="panel-teams" class="tool-panel" aria-label="Teams tool">
+          <div class="content">
+            <div id="teams-question-card" class="card fixed-question-card">
+              <p id="teams-main-text" class="prompt center-text"></p>
+            </div>
+
+            <div class="controls-3">
+              <button id="teams-solution" class="btn primary" type="button">Solution</button>
+              <button id="teams-refresh" class="btn buff" type="button">Refresh</button>
+              <button id="teams-instructions" class="btn secondary" type="button">Instructions</button>
+            </div>
+
+            <div id="teams-answer-box" class="card answer-box teams-answer-box hidden-visibility" aria-live="polite">
+              <p id="teams-answer-text" class="answer"></p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      const tabButtons = document.querySelectorAll('.tab-btn');
+      const panels = {
+        exist: document.getElementById('panel-exist'),
+        solve: document.getElementById('panel-solve'),
+        teams: document.getElementById('panel-teams')
+      };
+
+      tabButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const tab = button.dataset.tab;
+          tabButtons.forEach((btn) => btn.classList.toggle('active', btn === button));
+          Object.entries(panels).forEach(([name, panel]) => {
+            panel.classList.toggle('active', name === tab);
+          });
+        });
+      });
+
+      // EXIST (graphtester)
+      const MIN_VERTICES = 2;
+      const MAX_VERTICES = 1000;
+      const existQuestionEl = document.getElementById('exist-question');
+      const existResultBoxEl = document.getElementById('exist-result-box');
+      const existResultEl = document.getElementById('exist-result');
+      const existExplanationEl = document.getElementById('exist-explanation');
+      const existYesBtn = document.getElementById('exist-yes');
+      const existNoBtn = document.getElementById('exist-no');
+      const existWhyBtn = document.getElementById('exist-why');
+      const existRefreshBtn = document.getElementById('exist-refresh');
+
+      let existCurrentAnswer = null;
+      let existCurrentExplanation = '';
+
+      function randInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function randN() {
+        return randInt(MIN_VERTICES, MAX_VERTICES);
+      }
+
+      function connectedGraphExists(degrees) {
+        if (degrees.some(d => !Number.isInteger(d) || d < 1)) {
+          return false;
+        }
+        const total = degrees.reduce((a, b) => a + b, 0);
+        const n = degrees.length;
+        return total % 2 === 0 && total >= 2 * (n - 1);
+      }
+
+      function existResetButtons() {
+        [existYesBtn, existNoBtn].forEach((btn) => {
+          btn.classList.remove('outline-correct', 'outline-incorrect');
+        });
+      }
+
+      function existSetQuestion(text, answer, explanation) {
+        existCurrentAnswer = answer;
+        existCurrentExplanation = explanation;
+        existQuestionEl.textContent = text;
+        existResultEl.textContent = '';
+        existResultEl.className = 'result';
+        existExplanationEl.textContent = '';
+        existResultBoxEl.classList.add('hidden-visibility');
+        existWhyBtn.disabled = true;
+        existResetButtons();
+      }
+
+      function existCheck(guess) {
+        existWhyBtn.disabled = false;
+        existResetButtons();
+        existResultBoxEl.classList.remove('hidden-visibility');
+        existExplanationEl.textContent = '';
+        const btn = guess ? existYesBtn : existNoBtn;
+        if (guess === existCurrentAnswer) {
+          existResultEl.textContent = 'Correct';
+          existResultEl.className = 'result correct';
+          btn.classList.add('outline-correct');
+        } else {
+          existResultEl.textContent = 'Incorrect';
+          existResultEl.className = 'result incorrect';
+          btn.classList.add('outline-incorrect');
+        }
+      }
+
+      function existShowWhy() {
+        if (existResultBoxEl.classList.contains('hidden-visibility')) {
+          return;
+        }
+        existExplanationEl.textContent = existCurrentExplanation;
+      }
+
+      function buildAllSameValences(n) {
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if all vertices have the same valence?`,
+          answer: true,
+          explanation: 'Yes. Any even common valence works. Odd common valences can also work, but only when the number of vertices is even, because then the total valence is even.'
+        };
+      }
+
+      function buildAllSameValenceX(n) {
+        const x = n === 2 ? randInt(1, 20) : randInt(2, 20);
+        const total = n * x;
+        const answer = total % 2 === 0;
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if every vertex has valence ${x}?`,
+          answer,
+          explanation: `The total valence would be ${n} × ${x} = ${total}. For this exact case, the total must be even. ${answer ? 'It is even here, so such a graph can exist.' : 'It is odd here, so such a graph cannot exist.'}`
+        };
+      }
+
+      function buildAllDifferentValences(n) {
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if all vertex valences are different?`,
+          answer: true,
+          explanation: 'Yes. The valences are not specified, so we only need a pattern that works. We can choose distinct positive valences and adjust one of them if needed so the total is even and large enough.'
+        };
+      }
+
+      function buildConsecutiveNaturalNumbers(n) {
+        const total = n * (n + 1) / 2;
+        const answer = total % 2 === 0;
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if the valences are 1, 2, ..., ${n}?`,
+          answer,
+          explanation: `The total valence is 1 + 2 + ... + ${n} = ${total}. ${answer ? 'That total is even, so such a graph can exist.' : 'That total is odd, so such a graph cannot exist.'}`
+        };
+      }
+
+      function buildAllEven(n) {
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if every vertex has even valence?`,
+          answer: true,
+          explanation: 'Yes. Any positive even valences can work. Their total is even, and the total can easily be made large enough for connectedness.'
+        };
+      }
+
+      function buildAllOdd(n) {
+        const answer = n % 2 === 0;
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if every vertex has odd valence?`,
+          answer,
+          explanation: `The total would be a sum of odd numbers. ${answer ? 'Because the number of vertices is even, that total can be even, so such a graph can exist.' : 'Because the number of vertices is odd, that total would be odd, so such a graph cannot exist.'}`
+        };
+      }
+
+      function buildAllMultiplesOfX(n) {
+        const x = randInt(2, 12);
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if every valence is a multiple of ${x}?`,
+          answer: true,
+          explanation: `Yes. Any even multiple of ${x} works for any number of vertices. Odd multiples of ${x} can also work, but only when the number of vertices is even.`
+        };
+      }
+
+      function buildRandomSetOfValences() {
+        const n = randInt(2, 10);
+        const degrees = Array.from({ length: n }, () => randInt(1, 10));
+        const total = degrees.reduce((a, b) => a + b, 0);
+        const answer = connectedGraphExists(degrees);
+        return {
+          text: `A connected graph has ${n} vertices with valences ${degrees.join(', ')}. Can it exist?`,
+          answer,
+          explanation: `The total valence is ${total}. We need every valence at least 1, an even total, and a total of at least ${2 * (n - 1)}. ${answer ? 'Those conditions are satisfied.' : 'At least one of those conditions fails.'}`
+        };
+      }
+
+      function buildXWithValenceAYWithValenceB() {
+        const a = randInt(1, 7);
+        const b = randInt(1, 7);
+        const x = randInt(1, 15);
+        const y = randInt(1, 15);
+        const n = x + y;
+        const total = x * a + y * b;
+        const answer = total % 2 === 0 && total >= 2 * (n - 1);
+        return {
+          text: `Can a connected graph exist with ${x} vertices of valence ${a} and ${y} vertices of valence ${b}?`,
+          answer,
+          explanation: `There would be ${n} vertices and total valence ${x} × ${a} + ${y} × ${b} = ${total}. We need an even total and a total of at least ${2 * (n - 1)}. ${answer ? 'Those conditions are satisfied.' : 'At least one of those conditions fails.'}`
+        };
+      }
+
+      function buildSumIsOdd(n) {
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if the sum of the valences is odd?`,
+          answer: false,
+          explanation: 'No. In any undirected graph, the sum of the valences must be even.'
+        };
+      }
+
+      function buildSumIsEven(n) {
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if the sum of the valences is even?`,
+          answer: true,
+          explanation: 'Yes. An even total is required, but that is not enough by itself. The total also has to be large enough for connectedness, and some even totals do satisfy that.'
+        };
+      }
+
+      function buildProductIsOdd(n) {
+        const answer = n % 2 === 0;
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if the product of the valences is odd?`,
+          answer,
+          explanation: `A product is odd only if every valence is odd. ${answer ? 'With an even number of vertices, the total of those odd valences can be even, so such a graph can exist.' : 'With an odd number of vertices, the total of those odd valences would be odd, so such a graph cannot exist.'}`
+        };
+      }
+
+      function buildProductIsEven(n) {
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if the product of the valences is even?`,
+          answer: true,
+          explanation: 'Yes. An even product means at least one valence is even, but that alone does not settle the question. The total still has to be even and large enough, and some choices do satisfy those conditions.'
+        };
+      }
+
+      function buildXEdges() {
+        const x = randInt(0, 2000);
+        const n = randInt(2, Math.min(1000, x + 3));
+        const answer = x >= n - 1;
+        return {
+          text: `Can a connected graph with ${n} vertices exist with exactly ${x} edges?`,
+          answer,
+          explanation: `A connected graph with ${n} vertices must have at least ${n - 1} edges. ${answer ? 'This meets that bound, so such a graph can exist.' : 'This is below that bound, so such a graph cannot exist.'}`
+        };
+      }
+
+      function buildExactlyKOddVertices(n) {
+        const k = randInt(0, n);
+        const answer = k % 2 === 0;
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if exactly ${k} vertices have odd valence?`,
+          answer,
+          explanation: `The number of odd-valence vertices must be even. ${answer ? 'That holds here, so such a graph can exist.' : 'That does not hold here, so such a graph cannot exist.'}`
+        };
+      }
+
+      function buildExactlyKEvenVertices(n) {
+        const k = randInt(0, n);
+        const oddCount = n - k;
+        const answer = oddCount % 2 === 0;
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if exactly ${k} vertices have even valence?`,
+          answer,
+          explanation: `Then ${oddCount} vertices would have odd valence. ${answer ? 'That count is even, so such a graph can exist.' : 'That count is odd, so such a graph cannot exist.'}`
+        };
+      }
+
+      function buildSumEqualsS(n) {
+        const s = randInt(0, 200);
+        const answer = s % 2 === 0 && s >= 2 * (n - 1);
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if the sum of the valences is ${s}?`,
+          answer,
+          explanation: `We need the sum to be even and at least ${2 * (n - 1)}. ${answer ? 'Those conditions hold.' : 'At least one condition fails.'}`
+        };
+      }
+
+      function buildExactlyOneOddVertex(n) {
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if exactly one vertex has odd valence?`,
+          answer: false,
+          explanation: 'No. The number of odd-valence vertices must be even.'
+        };
+      }
+
+      function buildExactlyOneEvenVertex(n) {
+        const answer = (n - 1) % 2 === 0;
+        return {
+          text: `A connected graph has ${n} vertices. Can it exist if exactly one vertex has even valence?`,
+          answer,
+          explanation: `Then ${n - 1} vertices would have odd valence. ${answer ? 'That count is even, so such a graph can exist.' : 'That count is odd, so such a graph cannot exist.'}`
+        };
+      }
+
+      const EXIST_BUILDERS = [
+        buildAllSameValences,
+        buildAllSameValenceX,
+        buildAllDifferentValences,
+        buildConsecutiveNaturalNumbers,
+        buildAllEven,
+        buildAllOdd,
+        buildAllMultiplesOfX,
+        buildRandomSetOfValences,
+        buildXWithValenceAYWithValenceB,
+        buildSumIsOdd,
+        buildSumIsEven,
+        buildProductIsOdd,
+        buildProductIsEven,
+        buildXEdges,
+        buildExactlyKOddVertices,
+        buildExactlyKEvenVertices,
+        buildSumEqualsS,
+        buildExactlyOneOddVertex,
+        buildExactlyOneEvenVertex
+      ];
+
+      function existNewQuestion() {
+        const builder = EXIST_BUILDERS[randInt(0, EXIST_BUILDERS.length - 1)];
+        const item = builder(randN());
+        existSetQuestion(item.text, item.answer, item.explanation);
+      }
+
+      existYesBtn.addEventListener('click', () => existCheck(true));
+      existNoBtn.addEventListener('click', () => existCheck(false));
+      existWhyBtn.addEventListener('click', existShowWhy);
+      existRefreshBtn.addEventListener('click', existNewQuestion);
+
+      // SOLVE (graphsolver)
+      const solveQuestionEl = document.getElementById('solve-question');
+      const solveAnswerBox = document.getElementById('solve-answer-box');
+      const solveShowBtn = document.getElementById('solve-show');
+      const solveRefreshBtn = document.getElementById('solve-refresh');
+      let solveCurrentAnswer = '';
+
+      function joinValues(values) {
+        return values.join(', ');
+      }
+
+      function solveGenerateType1() {
+        const V = randInt(3, 6);
+        let valences;
+        let sum;
+
+        do {
+          valences = Array.from({ length: V }, () => randInt(1, 8));
+          sum = valences.reduce((a, b) => a + b, 0);
+        } while (sum % 2 !== 0 || sum / 2 > 9);
+
+        return {
+          question: `Suppose a graph consists of X edges and ${V} vertices with valences ${joinValues(valences)}. Solve for X.`,
+          answer: `${sum / 2}`
+        };
+      }
+
+      function solveGenerateType2() {
+        const E = randInt(2, 9);
+        const totalValence = 2 * E;
+        const V = randInt(3, 6);
+        const knownCount = V - 1;
+
+        for (let attempts = 0; attempts < 500; attempts++) {
+          const knownValences = Array.from({ length: knownCount }, () => randInt(1, 7));
+          const knownSum = knownValences.reduce((a, b) => a + b, 0);
+          const X = totalValence - knownSum;
+
+          if (X >= 1 && X <= 9) {
+            const values = knownValences.slice();
+            const insertAt = randInt(0, values.length);
+            values.splice(insertAt, 0, 'X');
+            return {
+              question: `Suppose a graph consists of ${E} edges and ${V} vertices with valences ${joinValues(values)}. Solve for X.`,
+              answer: `${X}`
+            };
+          }
+        }
+
+        return solveGenerateType2();
+      }
+
+      function solveNewQuestion() {
+        const generated = Math.random() < 0.5 ? solveGenerateType1() : solveGenerateType2();
+        solveQuestionEl.textContent = generated.question;
+        solveCurrentAnswer = generated.answer;
+        solveAnswerBox.textContent = '';
+        solveAnswerBox.classList.add('hidden-visibility');
+      }
+
+      solveShowBtn.addEventListener('click', () => {
+        solveAnswerBox.textContent = `X=${solveCurrentAnswer}`;
+        solveAnswerBox.classList.remove('hidden-visibility');
+      });
+      solveRefreshBtn.addEventListener('click', solveNewQuestion);
+
+      // TEAMS (graphteams)
+      const teamsQuestionCard = document.getElementById('teams-question-card');
+      const teamsMainText = document.getElementById('teams-main-text');
+      const teamsAnswerBox = document.getElementById('teams-answer-box');
+      const teamsAnswerText = document.getElementById('teams-answer-text');
+      const teamsSolutionBtn = document.getElementById('teams-solution');
+      const teamsRefreshBtn = document.getElementById('teams-refresh');
+      const teamsInstructionsBtn = document.getElementById('teams-instructions');
+
+      const teamsInstructionsText = [
+        'Represent each person and each team by a vertex in a graph.',
+        '',
+        'Teams are made up of a fixed number of people, and people can belong to more than one team. The valence of a person vertex corresponds to how many teams that person is in. The valence of a team vertex corresponds to how many people are on that team.',
+        '',
+        'Use the Handshaking Formula to determine how many teams were formed in each scenario. Make sure you can draw a graph representing the scenario. Note that your graph does not have to be fully connected.'
+      ].join('\n');
+
+      let teamsCurrentQuestion = null;
+      let teamsShowingInstructions = false;
+
+      function teamsGenerateQuestion() {
+        for (let attempt = 0; attempt < 500; attempt += 1) {
+          const P = randInt(2, 9);
+          const N = randInt(2, Math.min(6, P));
+          const T = randInt(2, 9);
+          const edgeCount = N * T;
+          const V = 2 * edgeCount;
+
+          if (edgeCount >= N && edgeCount <= 54) {
+            return {
+              P,
+              N,
+              T,
+              V,
+              prompt: `A group of ${P} people form teams of ${N}. If the total valence is ${V}, how many teams were formed?`,
+              answer: `${T} ${T === 1 ? 'team' : 'teams'}`
+            };
+          }
+        }
+
+        return {
+          P: 4,
+          N: 2,
+          T: 3,
+          V: 12,
+          prompt: 'A group of 4 people form teams of 2. If the total valence is 12, how many teams were formed?',
+          answer: '3 teams'
+        };
+      }
+
+      function teamsRenderQuestion() {
+        teamsQuestionCard.classList.remove('instructions-mode');
+        teamsMainText.className = 'prompt center-text';
+        teamsMainText.textContent = teamsCurrentQuestion.prompt;
+        teamsAnswerText.textContent = '';
+        teamsAnswerBox.classList.add('hidden-visibility');
+        teamsSolutionBtn.style.display = 'inline-block';
+        teamsRefreshBtn.style.display = 'inline-block';
+        teamsInstructionsBtn.textContent = 'Instructions';
+        teamsShowingInstructions = false;
+      }
+
+      function teamsNewQuestion() {
+        teamsCurrentQuestion = teamsGenerateQuestion();
+        teamsAnswerText.textContent = '';
+        teamsRenderQuestion();
+      }
+
+      teamsSolutionBtn.addEventListener('click', () => {
+        teamsAnswerText.textContent = teamsCurrentQuestion.answer;
+        teamsAnswerBox.classList.remove('hidden-visibility');
+      });
+
+      teamsRefreshBtn.addEventListener('click', teamsNewQuestion);
+
+      teamsInstructionsBtn.addEventListener('click', () => {
+        if (!teamsShowingInstructions) {
+          teamsQuestionCard.classList.add('instructions-mode');
+          teamsMainText.className = 'instructions left-text';
+          teamsMainText.textContent = teamsInstructionsText;
+          teamsAnswerBox.classList.add('hidden-visibility');
+          teamsSolutionBtn.style.display = 'none';
+          teamsRefreshBtn.style.display = 'none';
+          teamsInstructionsBtn.textContent = 'Question';
+          teamsShowingInstructions = true;
+        } else {
+          teamsRenderQuestion();
+        }
+      });
+
+      existNewQuestion();
+      solveNewQuestion();
+      teamsNewQuestion();
+    })();
+  </script>
+</body>
+</html>
